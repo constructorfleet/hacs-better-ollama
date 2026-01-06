@@ -141,24 +141,34 @@ async def _transform_stream(
 
     async for response in result:
         response_message = response.get("message", {})
+        chunk: conversation.AssistantContentDeltaDict = {}
         done = response.get("done", False)
 
         # Emit assistant role exactly once per message
         if not sent_role:
             sent_role = True
-            yield {"role": "assistant"}
-
-        # Emit partial text immediately
-        if content := response_message.get("content"):
-            yield {"content": content}
+            chunk["role"] = "assistant"
 
         # Emit tool calls immediately when they appear
         if tool_calls := response_message.get("tool_calls"):
-            yield {"tool_calls": tool_calls}
+            chunk["tool_calls"] = [
+                llm.ToolInput(
+                    tool_name=tool_call["function"]["name"],
+                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
+                )
+                for tool_call in tool_calls
+            ]
+
+        # Emit partial text immediately
+        if (content := response_message.get("content")) is not None:
+            chunk["content"] = content
+        if (thinking := response_message.get("thinking")) is not None:
+            chunk["thinking_content"] = thinking
 
         # Reset state for next assistant message
         if done:
             sent_role = False
+        yield chunk
 
 
 class OllamaBaseLLMEntity(Entity):
