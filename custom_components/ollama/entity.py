@@ -121,6 +121,80 @@ def _convert_content(
     raise TypeError(f"Unexpected content type: {type(chat_content)}")
 
 
+def _buffer_ends_with_partial_tag(buffer: str, tag_start: str) -> tuple[bool, str]:
+    """Check if buffer ends with a partial tag.
+
+    Returns (has_partial, partial_text).
+    """
+    potential_partials = [tag_start[: i + 1] for i in range(len(tag_start))]
+    for partial in reversed(potential_partials):
+        if buffer.endswith(partial):
+            return True, partial
+    return False, ""
+
+
+def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, Any]) -> tuple[str, bool]:
+    """Process content buffer to extract thinking and regular content.
+
+    Returns (remaining_buffer, in_think_tag).
+    """
+    while True:
+        if not in_think_tag:
+            # Look for opening <think> tag (allowing attributes)
+            think_start = buffer.find("<think")
+            if think_start != -1:
+                # Emit any content before the tag
+                if think_start > 0:
+                    chunk["content"] = chunk.get("content", "") + buffer[:think_start]
+                    buffer = buffer[think_start:]
+
+                # Find the end of the opening tag
+                tag_end = buffer.find(">")
+                if tag_end != -1:
+                    # Found complete opening tag, switch to thinking mode
+                    in_think_tag = True
+                    buffer = buffer[tag_end + 1 :]
+                    continue
+                # Incomplete opening tag, wait for more data
+                break
+            # Check if we might have a partial "<think" at the end
+            has_partial, partial = _buffer_ends_with_partial_tag(buffer, "<think")
+            if has_partial:
+                # Keep the partial in buffer, emit the rest
+                if len(buffer) > len(partial):
+                    chunk["content"] = chunk.get("content", "") + buffer[: -len(partial)]
+                    buffer = buffer[-len(partial) :]
+            # No <think> tag and no partial, emit all content
+            elif buffer:
+                chunk["content"] = chunk.get("content", "") + buffer
+                buffer = ""
+            break
+        # Inside <think> tag, look for closing </think>
+        think_end = buffer.find("</think>")
+        if think_end != -1:
+            # Emit thinking content
+            if think_end > 0:
+                chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer[:think_end]
+            # Switch back to regular content mode
+            in_think_tag = False
+            buffer = buffer[think_end + 8 :]  # len("</think>") = 8
+            continue
+        # Check for partial closing tag at the end
+        has_partial, partial = _buffer_ends_with_partial_tag(buffer, "</think>")
+        if has_partial:
+            # Keep the partial in buffer, emit the rest as thinking
+            if len(buffer) > len(partial):
+                chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer[: -len(partial)]
+                buffer = buffer[-len(partial) :]
+        # No closing tag yet, emit as thinking and wait for more
+        elif buffer:
+            chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer
+            buffer = ""
+        break
+
+    return buffer, in_think_tag
+
+
 async def _transform_stream(
     result: AsyncIterator[ollama.ChatResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
@@ -136,8 +210,14 @@ async def _transform_stream(
 
     This generator conforms to the chatlog delta stream expectations in that it
     yields deltas, then the role only once the response is done.
+
+    Some models put thinking content inline wrapped in <think> tags instead of
+    using the separate 'thinking' field. This function handles both cases by
+    parsing content for <think>...</think> tags and extracting them as thinking_content.
     """
     sent_role = False
+    in_think_tag = False
+    buffer = ""
 
     async for response in result:
         response_message = response.get("message", {})
@@ -159,15 +239,27 @@ async def _transform_stream(
                 for tool_call in tool_calls
             ]
 
-        # Emit partial text immediately
-        if (content := response_message.get("content")) is not None:
-            chunk["content"] = content
+        # Handle explicit thinking field
         if (thinking := response_message.get("thinking")) is not None:
             chunk["thinking_content"] = thinking
+
+        # Handle content with potential inline <think> tags
+        if (content := response_message.get("content")) is not None:
+            buffer += content
+            buffer, in_think_tag = _process_content_buffer(buffer, in_think_tag, chunk)
 
         # Reset state for next assistant message
         if done:
             sent_role = False
+            # Emit any remaining buffered content
+            if buffer:
+                if in_think_tag:
+                    chunk["thinking_content"] = buffer
+                else:
+                    chunk["content"] = buffer
+                buffer = ""
+            in_think_tag = False
+
         yield chunk
 
 
