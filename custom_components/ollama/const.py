@@ -158,7 +158,16 @@ MODEL_NAMES = [  # https://ollama.com/library
     "yi",
     "zephyr",
 ]
-DEFAULT_MODEL = "qwen3:4b"
+# Vision models that support image inputs (multimodal)
+VISION_MODELS = [
+    "bakllava",
+    "llava-llama3",
+    "llava-phi3",
+    "llava",
+    "minicpm-v",
+    "moondream",
+]
+DEFAULT_MODEL = "qwen2.5:4b"
 
 DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
 DEFAULT_AI_TASK_NAME = "Ollama AI Task"

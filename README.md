@@ -21,32 +21,22 @@ Uncomment and customize these badges if you want to use them:
 ## ✨ Features
 
 - **Easy Setup**: Simple configuration through the UI - no YAML required
-- **Air Quality Monitoring**: Track AQI and PM2.5 levels in real-time
-- **Filter Management**: Monitor filter life and get replacement alerts
-- **Smart Control**: Adjust fan speed, target humidity, and operating modes
-- **Child Lock**: Safety feature to prevent accidental changes
-- **Diagnostic Info**: View filter life, runtime hours, and device statistics
-- **Reconfigurable**: Change credentials anytime without removing the integration
-- **Options Flow**: Adjust settings like update interval after setup
-- **Custom Services**: Advanced control with built-in service calls
+- **Multiple Agents**: Create conversation and AI task agents with different models
+- **Vision Support**: Use multimodal models (LLaVA, Moondream) to process images 📷
+- **Streaming Responses**: Real-time conversation streaming for immediate feedback
+- **Tool Integration**: Connect with Home Assistant services and entities
+- **Conversation History**: Configurable message history for context retention
+- **Smart Control**: Adjust context window, keep-alive, and other model parameters
+- **Think Mode**: Enable reasoning traces for supported models
+- **Reconfigurable**: Change models and settings anytime without removing the integration
+- **Options Flow**: Adjust settings like context window and history after setup
 
 **This integration will set up the following platforms.**
 
 Platform | Description
 -- | --
-`sensor` | Air quality index (AQI), PM2.5, filter life, and runtime
-`binary_sensor` | API connection status and filter replacement alert
-`switch` | Child lock and LED display controls
-`select` | Fan speed selection (Low/Medium/High/Auto)
-`number` | Target humidity setting (30-80%)
-`button` | Reset filter timer after replacement
-`fan` | Air purifier fan control with speed settings
-
-> **💡 Interactive Demo**: The entities are interconnected for demonstration:
->
-> - Press the **Reset Filter Timer** button → **Filter Life Remaining** sensor updates to 100%
-> - Change the **Air Purifier** fan speed → **Fan Speed** select syncs automatically
-> - Change the **Fan Speed** select → **Air Purifier** fan syncs automatically
+`conversation` | AI conversation agents with streaming support
+`ai_task` | Structured data generation with vision support
 
 ## 🚀 Quick Start
 
@@ -88,124 +78,130 @@ Click the button below to open the configuration dialog:
 
 Follow the setup wizard:
 
-1. Enter your username
-2. Enter your password
-3. Click Submit
+1. Enter your Ollama server URL (e.g., `http://localhost:11434`)
+2. Click Submit
+3. Add conversation or AI task agents
+4. Select a model (📷 indicates vision-capable models like LLaVA)
+5. Configure optional settings
 
-That's it! The integration will start loading your data.
+That's it! The integration will start and you can use your Ollama models in Home Assistant.
 
 #### Option 2: Manual Configuration
 
 1. Go to **Settings** → **Devices & Services**
 2. Click **"+ Add Integration"**
-3. Search for "Better Ollama"
+3. Search for "Ollama"
 4. Follow the same setup steps as Option 1
 
 ### Step 3: Adjust Settings (Optional)
 
-After setup, you can adjust options:
+After setup, you can adjust options for each agent:
 
 1. Go to **Settings** → **Devices & Services**
-2. Find **Better Ollama**
-3. Click **Configure** to adjust:
-   - Update interval (how often to refresh data)
-   - Enable debug logging
+2. Find **Ollama**
+3. Click on an agent device
+4. Click **Configure** to adjust:
+   - Context window size (num_ctx)
+   - Conversation history length
+   - Keep-alive timeout
+   - Think mode (for reasoning traces)
 
-You can also **Reconfigure** your credentials anytime without removing the integration.
+You can also **Reconfigure** to change the model without removing the agent.
 
 ### Step 4: Start Using!
 
-The integration creates several entities for your air purifier:
+#### Conversation Agents
 
-- **Sensors**: Air quality index, PM2.5 levels, filter life remaining, total runtime
-- **Binary Sensors**: API connection status, filter replacement alert
-- **Switches**: Child lock, LED display control
-- **Select**: Fan speed (Low/Medium/High/Auto)
-- **Number**: Target humidity (30-80%)
-- **Button**: Reset filter timer
-- **Fan**: Air purifier fan control
+Use conversation agents through Home Assistant's Assist:
 
-Find all entities in **Settings** → **Devices & Services** → **Better Ollama** → click on the device.
+1. Go to **Settings** → Voice Assistants → **Assist**
+2. Select your Ollama conversation agent
+3. Start chatting!
 
-## Available Entities
+For vision models (marked with 📷), you can send images through supported interfaces.
 
-### Sensors
+#### AI Task Agents
 
-- **Air Quality Index (AQI)**: Real-time air quality measurement (0-500 scale)
-  - Includes air quality category (Good/Moderate/Unhealthy/etc.)
-  - Health recommendations based on current AQI
-- **PM2.5**: Fine particulate matter concentration in µg/m³
-- **Filter Life Remaining** (Diagnostic): Shows remaining filter life as percentage
-- **Total Runtime** (Diagnostic): Total operating hours of the device
+Use AI task agents in automations and scripts:
 
-### Binary Sensors
+```yaml
+action: ai_task.generate_data
+target:
+  entity_id: ai_task.ollama_task
+data:
+  task: "Extract the vendor and total from this receipt"
+  attachments:
+    - /local/receipt.jpg
+  structure:
+    type: object
+    properties:
+      vendor:
+        type: string
+      total:
+        type: number
+```
 
-- **API Connection**: Shows whether the connection to the API is active
-  - On: Connected and receiving data
-  - Off: Connection lost or authentication failed
-  - Shows update interval and API endpoint information
-- **Filter Replacement Needed**: Alerts when filter needs replacement
-  - Shows estimated days remaining
-  - Turns on when filter life is low
+See [docs/user/VISION.md](docs/user/VISION.md) for detailed vision model usage and examples.
 
-### Switches
+## Available Agent Types
 
-- **Child Lock**: Prevents accidental button presses on the device
-  - Icon changes based on state (locked/unlocked)
-- **LED Display**: Enable/disable the LED display
-  - Disabled by default - enable in entity settings if needed
+### Conversation Agents
 
-### Select
+Conversation agents provide interactive chat experiences with:
+- Streaming responses for real-time feedback
+- Conversation history retention
+- Tool/service integration (when configured with LLM Home Assistant API)
+- Vision support for image understanding (with vision models)
 
-- **Fan Speed**: Choose from Low, Medium, High, or Auto
-  - Icon changes dynamically based on selected speed
-  - Auto mode adjusts speed based on air quality
-  - Syncs bidirectionally with the Air Purifier fan entity
+### AI Task Agents
 
-### Number
+AI Task agents generate structured data from natural language:
+- Extract specific data with JSON schemas
+- Process images for OCR and analysis
+- Generate formatted responses for automations
+- Support complex data structures
 
-- **Target Humidity**: Set desired humidity level (30-80%)
-  - Adjustable in 5% increments
-  - Displayed as a slider in the UI
+## Vision Models 📷
 
-### Button
+Vision-capable models can process and understand images. Use them for:
+- Image description and captioning
+- Visual question answering
+- OCR (text extraction from images)
+- Scene understanding and object detection
 
-- **Reset Filter Timer**: Reset the filter life to 100%
-  - Press to reset after replacing the filter
-  - Instantly updates the Filter Life Remaining sensor
+**Supported vision models:**
+- llava (general purpose)
+- llava-llama3 (improved reasoning)
+- llava-phi3 (efficient, smaller)
+- bakllava (alternative)
+- minicpm-v (compact)
+- moondream (lightweight)
 
-### Fan
-
-- **Air Purifier**: Control the air purifier fan speed and power
-  - Three speed levels: Low, Medium, High
-  - Syncs bidirectionally with the Fan Speed select entity
-  - Turn on/off functionality
+See [docs/user/VISION.md](docs/user/VISION.md) for detailed vision usage guide.
 
 ## Custom Services
 
 The integration provides services for advanced automation:
 
-### `ollama.example_action`
+### `ai_task.generate_data`
 
-Perform a custom action (customize this for your needs).
+Generate structured data from natural language or images.
 
 **Example:**
 
 ```yaml
-service: ollama.example_action
+action: ai_task.generate_data
+target:
+  entity_id: ai_task.ollama_task
 data:
-  # Add your parameters here
+  task: "What's in this image?"
+  attachments:
+    - /local/photo.jpg
 ```
 
-### `ollama.reload_data`
+### Configuration Entry Management
 
-Manually refresh data from the API without waiting for the update interval.
-
-**Example:**
-
-```yaml
-service: ollama.reload_data
-```
+Standard Home Assistant config entry services are available for managing agents.
 
 Use these services in automations or scripts for more control.
 
@@ -215,84 +211,67 @@ Use these services in automations or scripts for more control.
 
 Name | Required | Description
 -- | -- | --
-Username | Yes | Your account username
-Password | Yes | Your account password
+Ollama URL | Yes | URL of your Ollama server (e.g., http://localhost:11434)
 
 ### After Setup (Options)
 
-You can change these anytime by clicking **Configure**:
+You can change these anytime by clicking **Configure** on an agent:
 
 Name | Default | Description
 -- | -- | --
-Update Interval | 1 hour | How often to refresh data
-Enable Debugging | Off | Enable extra debug logging
+Model | - | The Ollama model to use (📷 indicates vision support)
+Context Window | 8192 | Size of the context window (num_ctx)
+History Length | 20 | Number of conversation rounds to retain
+Keep Alive | -1 | How long to keep model in memory (-1 = forever)
+Think Mode | Off | Enable reasoning traces (supported models only)
+Prompt Template | - | Custom system prompt (conversation agents only)
 
 ## Troubleshooting
 
-### Authentication Issues
+### Connection Issues
 
-#### Reauthentication
+If setup fails or agents become unavailable:
 
-If your credentials expire or change, Home Assistant will automatically prompt you to reauthenticate:
+1. Verify the Ollama server URL is correct and reachable
+2. Ensure Ollama is running (`ollama serve`)
+3. Check that the model is downloaded (`ollama list`)
+4. Review Home Assistant logs for error messages
 
-1. Go to **Settings** → **Devices & Services**
-2. Look for **"Action Required"** or **"Configuration Required"** message on the integration
-3. Click **"Reconfigure"** or follow the prompt
-4. Enter your updated credentials
-5. Click Submit
+### Models Not Showing
 
-The integration will automatically resume normal operation with the new credentials.
+If models don't appear in the dropdown:
 
-#### Manual Credential Update
+1. Verify Ollama server is running and accessible
+2. Check that models are downloaded (`ollama list`)
+3. Try manually entering a model name if auto-detection fails
 
-You can also update credentials at any time without waiting for an error:
+### Vision Not Working
 
-1. Go to **Settings** → **Devices & Services**
-2. Find **Better Ollama**
-3. Click the **3 dots menu** → **Reconfigure**
-4. Enter new username/password
-5. Click Submit
+If vision models don't process images:
 
-#### Connection Status
+1. Ensure you're using a vision-capable model (marked with 📷)
+2. Verify image format is supported (JPEG, PNG, WebP, GIF)
+3. Check image file size is under 20MB
+4. See [docs/user/VISION.md](docs/user/VISION.md) for detailed troubleshooting
 
-Monitor your connection status with the **API Connection** binary sensor:
+### Debug Logging
 
-- **On** (Connected): Integration is receiving data normally
-- **Off** (Disconnected): Connection lost or authentication failed
-  - Check the binary sensor attributes for diagnostic information
-  - Verify credentials if authentication failed
-  - Check network connectivity
-
-### Enable Debug Logging
-
-To enable debug logging for this integration, add the following to your `configuration.yaml`:
+Enable debug logging to troubleshoot issues:
 
 ```yaml
 logger:
-  default: info
+  default: warning
   logs:
     custom_components.ollama: debug
 ```
 
-### Common Issues
+Add this to `configuration.yaml`, restart, and reproduce the issue. Check logs for detailed information.
 
-#### Authentication Errors
+## Next Steps
 
-If you receive authentication errors:
-
-1. Verify your username and password are correct
-2. Check that your account has the necessary permissions
-3. Wait for the automatic reauthentication prompt, or manually reconfigure
-4. Check the API Connection binary sensor for status
-
-#### Device Not Responding
-
-If your device is not responding:
-
-1. Check the **API Connection** binary sensor - it should be "On"
-2. Check your network connection
-3. Verify the device is powered on
-4. Check the integration diagnostics (Settings → Devices & Services → Better Ollama → 3 dots → Download diagnostics)
+- See [docs/user/VISION.md](docs/user/VISION.md) for vision model usage
+- See [docs/user/CONFIGURATION.md](docs/user/CONFIGURATION.md) for detailed configuration
+- Report issues at [GitHub Issues](https://github.com/constructorfleet/hacs-better-ollama/issues)
 
 ## 🤝 Contributing
 
