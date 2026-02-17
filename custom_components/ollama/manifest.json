@@ -2,12 +2,13 @@
   "domain": "ollama",
   "name": "Ollama",
   "after_dependencies": ["assist_pipeline", "intent"],
-  "codeowners": ["@synesthesiam"],
+  "codeowners": ["@teagan42"],
   "config_flow": true,
   "dependencies": ["conversation"],
-  "documentation": "https://www.home-assistant.io/integrations/ollama",
+  "documentation": "https://github.com/constructorfleet/hacs-ollama",
   "integration_type": "service",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/constructorfleet/hacs-ollama/issues",
   "requirements": ["ollama==0.5.1"],
   "version": "1.0.0"
 }
