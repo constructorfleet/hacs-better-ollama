@@ -58,6 +58,7 @@ from .const import (
     MAX_NUM_CTX,
     MIN_NUM_CTX,
     MODEL_NAMES,
+    VISION_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -171,11 +172,19 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(reason="cannot_connect")
 
             # Show models that have been downloaded first, followed by all known
-            # models (only latest tags).
+            # models (only latest tags). Mark vision models with 📷 emoji.
+            def _model_label(model_name: str, downloaded: bool) -> str:
+                """Generate model label with vision indicator."""
+                # Extract base model name without version tag
+                base_name = model_name.split(":")[0]
+                vision_indicator = "📷 " if base_name in VISION_MODELS else ""
+                downloaded_text = " (downloaded)" if downloaded else ""
+                return f"{vision_indicator}{model_name}{downloaded_text}"
+
             models_to_list = [
-                SelectOptionDict(label=f"{m} (downloaded)", value=m) for m in sorted(downloaded_models)
+                SelectOptionDict(label=_model_label(m, True), value=m) for m in sorted(downloaded_models)
             ] + [
-                SelectOptionDict(label=m, value=f"{m}:latest")
+                SelectOptionDict(label=_model_label(f"{m}:latest", False), value=f"{m}:latest")
                 for m in sorted(MODEL_NAMES)
                 if m not in downloaded_models
             ]
