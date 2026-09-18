@@ -176,7 +176,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
             def _model_label(model_name: str, downloaded: bool) -> str:
                 """Generate model label with vision indicator."""
                 # Extract base model name without version tag
-                base_name = model_name.split(":")[0]
+                base_name = model_name.split(":", maxsplit=1)[0]
                 vision_indicator = "📷 " if base_name in VISION_MODELS else ""
                 downloaded_text = " (downloaded)" if downloaded else ""
                 return f"{vision_indicator}{model_name}{downloaded_text}"
@@ -255,7 +255,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
         if self.download_task.done():
             if err := self.download_task.exception():
-                _LOGGER.exception("Unexpected error while downloading model: %s", err)
+                _LOGGER.error("Unexpected error while downloading model: %s", err)
                 return self.async_show_progress_done(next_step_id="failed")
 
             return self.async_show_progress_done(next_step_id="finish")

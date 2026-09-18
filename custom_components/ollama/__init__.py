@@ -286,9 +286,7 @@ def _add_ai_task_subentry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None
 
 def _get_loaded_platforms() -> tuple[Platform, ...]:
     """Return available platforms for this installation."""
-    missing_platforms = {
-        platform for platform in PLATFORMS if find_spec(f"{__package__}.{platform.value}") is None
-    }
+    missing_platforms = {platform for platform in PLATFORMS if find_spec(f"{__package__}.{platform.value}") is None}
     if Platform.AI_TASK in missing_platforms:
         _LOGGER.warning("Skipping ai_task platform setup because custom_components/ollama/ai_task.py is missing")
 
