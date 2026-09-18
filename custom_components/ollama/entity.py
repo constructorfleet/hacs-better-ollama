@@ -133,7 +133,11 @@ def _buffer_ends_with_partial_tag(buffer: str, tag_start: str) -> tuple[bool, st
     return False, ""
 
 
-def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, Any]) -> tuple[str, bool]:
+def _process_content_buffer(
+    buffer: str,
+    in_think_tag: bool,
+    chunk: conversation.AssistantContentDeltaDict,
+) -> tuple[str, bool]:
     """Process content buffer to extract thinking and regular content.
 
     Returns (remaining_buffer, in_think_tag).
