@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from importlib.util import find_spec
 import logging
 from types import MappingProxyType
 
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, _get_loaded_platforms())
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ollama."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if not await hass.config_entries.async_unload_platforms(entry, _get_loaded_platforms()):
         return False
     return True
 
@@ -281,3 +282,14 @@ def _add_ai_task_subentry(hass: HomeAssistant, entry: OllamaConfigEntry) -> None
                 unique_id=None,
             ),
         )
+
+
+def _get_loaded_platforms() -> tuple[Platform, ...]:
+    """Return available platforms for this installation."""
+    missing_platforms = {
+        platform for platform in PLATFORMS if find_spec(f"{__package__}.{platform.value}") is None
+    }
+    if Platform.AI_TASK in missing_platforms:
+        _LOGGER.warning("Skipping ai_task platform setup because custom_components/ollama/ai_task.py is missing")
+
+    return tuple(platform for platform in PLATFORMS if platform not in missing_platforms)
