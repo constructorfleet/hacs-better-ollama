@@ -255,7 +255,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
         if self.download_task.done():
             if err := self.download_task.exception():
-                _LOGGER.error("Unexpected error while downloading model: %s", err)
+                _LOGGER.error("Unexpected error while downloading model", exc_info=err)
                 return self.async_show_progress_done(next_step_id="failed")
 
             return self.async_show_progress_done(next_step_id="finish")
