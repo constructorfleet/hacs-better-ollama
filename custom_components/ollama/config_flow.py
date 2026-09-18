@@ -105,7 +105,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             client = ollama.AsyncClient(host=url, verify=get_default_context())
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 await client.list()
-        except (TimeoutError, httpx.ConnectError):
+        except TimeoutError, httpx.ConnectError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -167,7 +167,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                     response = await self._client.list()
 
                 downloaded_models: set[str] = {model_info["model"] for model_info in response.get("models", [])}
-            except (TimeoutError, httpx.ConnectError, httpx.HTTPError):
+            except TimeoutError, httpx.ConnectError, httpx.HTTPError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
