@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -133,7 +133,20 @@ def _buffer_ends_with_partial_tag(buffer: str, tag_start: str) -> tuple[bool, st
     return False, ""
 
 
-def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, Any]) -> tuple[str, bool]:
+def _append_chunk_text(
+    chunk: conversation.AssistantContentDeltaDict,
+    key: Literal["content", "thinking_content"],
+    value: str,
+) -> None:
+    """Append text to a streaming chunk field."""
+    chunk[key] = f"{chunk.get(key) or ''}{value}"
+
+
+def _process_content_buffer(
+    buffer: str,
+    in_think_tag: bool,
+    chunk: conversation.AssistantContentDeltaDict,
+) -> tuple[str, bool]:
     """Process content buffer to extract thinking and regular content.
 
     Returns (remaining_buffer, in_think_tag).
@@ -145,7 +158,7 @@ def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, An
             if think_start != -1:
                 # Emit any content before the tag
                 if think_start > 0:
-                    chunk["content"] = chunk.get("content", "") + buffer[:think_start]
+                    _append_chunk_text(chunk, "content", buffer[:think_start])
                     buffer = buffer[think_start:]
 
                 # Find the end of the opening tag
@@ -162,11 +175,11 @@ def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, An
             if has_partial:
                 # Keep the partial in buffer, emit the rest
                 if len(buffer) > len(partial):
-                    chunk["content"] = chunk.get("content", "") + buffer[: -len(partial)]
+                    _append_chunk_text(chunk, "content", buffer[: -len(partial)])
                     buffer = buffer[-len(partial) :]
             # No <think> tag and no partial, emit all content
             elif buffer:
-                chunk["content"] = chunk.get("content", "") + buffer
+                _append_chunk_text(chunk, "content", buffer)
                 buffer = ""
             break
         # Inside <think> tag, look for closing </think>
@@ -174,7 +187,7 @@ def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, An
         if think_end != -1:
             # Emit thinking content
             if think_end > 0:
-                chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer[:think_end]
+                _append_chunk_text(chunk, "thinking_content", buffer[:think_end])
             # Switch back to regular content mode
             in_think_tag = False
             buffer = buffer[think_end + 8 :]  # len("</think>") = 8
@@ -184,11 +197,11 @@ def _process_content_buffer(buffer: str, in_think_tag: bool, chunk: dict[str, An
         if has_partial:
             # Keep the partial in buffer, emit the rest as thinking
             if len(buffer) > len(partial):
-                chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer[: -len(partial)]
+                _append_chunk_text(chunk, "thinking_content", buffer[: -len(partial)])
                 buffer = buffer[-len(partial) :]
         # No closing tag yet, emit as thinking and wait for more
         elif buffer:
-            chunk["thinking_content"] = chunk.get("thinking_content", "") + buffer
+            _append_chunk_text(chunk, "thinking_content", buffer)
             buffer = ""
         break
 

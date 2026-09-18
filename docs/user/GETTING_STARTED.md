@@ -4,7 +4,7 @@ This guide will help you install and set up the Better Ollama custom integration
 
 ## Prerequisites
 
-- Home Assistant 2026.7.0 or newer
+- Home Assistant 2026.9.0 or newer
 - HACS (Home Assistant Community Store) installed
 - Network connectivity to [external service/device]
 
