@@ -5,12 +5,21 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "The Ollama integration needs to re-authenticate with your Ollama API key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "url": "[%key:common::config_flow::data::url%]"
         }
       }
@@ -21,8 +30,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "download_failed": "[%key:component::ollama::config_subentries::conversation::abort::download_failed%]",
-        "entry_not_loaded": "[%key:component::ollama::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "[%key:component::ollama::config_subentries::conversation::abort::entry_not_loaded%]"
       },
       "entry_type": "AI task",
       "initiate_flow": {
@@ -59,8 +67,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "download_failed": "Model downloading failed",
-        "entry_not_loaded": "Failed to add agent. The configuration is disabled.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled."
       },
       "entry_type": "Conversation agent",
       "initiate_flow": {
@@ -93,11 +100,88 @@
           }
         }
       }
+    },
+    "decision": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "download_failed": "[%key:component::ollama::config_subentries::conversation::abort::download_failed%]",
+        "entry_not_loaded": "[%key:component::ollama::config_subentries::conversation::abort::entry_not_loaded%]",
+        "not_decision_model": "The downloaded model does not support System One decisions."
+      },
+      "entry_type": "Decision model",
+      "error": {
+        "not_decision_model": "[%key:component::ollama::config_subentries::decision::abort::not_decision_model%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure decision model",
+        "user": "Add decision model"
+      },
+      "progress": {
+        "download": "[%key:component::ollama::config_subentries::conversation::progress::download%]"
+      },
+      "step": {
+        "download": {
+          "title": "[%key:component::ollama::config_subentries::conversation::step::download::title%]"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::keep_alive%]",
+            "model": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::model%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "keep_alive": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::keep_alive%]",
+            "model": "A System One decision model, such as nimble or clef. Requires Ollama v0.35.0 or later."
+          }
+        }
+      }
     }
   },
   "exceptions": {
+    "decision_failed": {
+      "message": "Error talking to the Ollama server: {error}"
+    },
+    "duplicate_question_name": {
+      "message": "More than one question is named {name}."
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} was not found."
+    },
+    "invalid_decision_request": {
+      "message": "Invalid decision request: {error}"
+    },
+    "not_decision_entity": {
+      "message": "{entity_id} is not an Ollama decision entity. Add a decision model to use it with this action."
+    },
     "unsupported_attachment_type": {
       "message": "Ollama only supports image attachments in user content, but received non-image attachment."
+    },
+    "unsupported_decision_attachment_type": {
+      "message": "Decision attachments must be PNG, JPEG or WebP images, but received {mime_type}."
+    }
+  },
+  "services": {
+    "decide": {
+      "name": "Decide",
+      "description": "Answers yes/no (noul), choice and score questions about a prompt and/or entity states with an Ollama System One decision model.",
+      "fields": {
+        "attachments": {
+          "name": "Attachments",
+          "description": "Images (PNG, JPEG or WebP) shared by all questions. Requires a vision decision model such as clef."
+        },
+        "entities": {
+          "name": "Entities",
+          "description": "Entities whose current state and attributes are included in the state the questions are asked about."
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "Text describing the state the questions are about. When entities are also given, this is included as `context`."
+        },
+        "questions": {
+          "name": "Questions",
+          "description": "List of questions. Each has a type (noul, choice or score), instructions, criteria (choice: option to description map; score: list from lowest to highest; noul: optional true/false descriptions) and an optional name used as the answer key."
+        }
+      }
     }
   }
 }

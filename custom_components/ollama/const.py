@@ -4,8 +4,6 @@ DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
 
-CONF_MODEL = "model"
-CONF_PROMPT = "prompt"
 CONF_THINK = "think"
 
 CONF_KEEP_ALIVE = "keep_alive"
@@ -17,7 +15,6 @@ DEFAULT_TIMEOUT = 5.0  # seconds
 CONF_NUM_CTX = "num_ctx"
 DEFAULT_NUM_CTX = 8192
 MIN_NUM_CTX = 2048
-MAX_NUM_CTX = 131072
 DEFAULT_THINK = False
 
 CONF_MAX_HISTORY = "max_history"
@@ -167,10 +164,23 @@ VISION_MODELS = [
     "minicpm-v",
     "moondream",
 ]
-DEFAULT_MODEL = "qwen2.5:4b"
+DEFAULT_MODEL = "qwen3:4b-instruct"
 
 DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
 DEFAULT_AI_TASK_NAME = "Ollama AI Task"
+DEFAULT_DECISION_NAME = "Ollama Decision"
+
+SUBENTRY_TYPE_DECISION = "decision"
+
+# System One decision models: https://ollama.com/search?c=decision
+DECISION_MODEL_NAMES = [
+    "clef",
+    "clef-flash",
+    "nimble",
+    "tev1",
+]
+DEFAULT_DECISION_MODEL = "nimble:latest"
+DEFAULT_DECISION_KEEP_ALIVE = 300  # seconds
 
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_MAX_HISTORY: DEFAULT_MAX_HISTORY,

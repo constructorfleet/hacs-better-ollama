@@ -4,11 +4,11 @@
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@teagan42"],
   "config_flow": true,
-  "dependencies": ["conversation"],
-  "documentation": "https://github.com/constructorfleet/hacs-ollama",
+  "dependencies": ["ai_task", "conversation"],
+  "documentation": "https://github.com/constructorfleet/hacs-better-ollama",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/constructorfleet/hacs-ollama/issues",
-  "requirements": ["ollama==0.6.1"],
-  "version": "1.2.0"
+  "issue_tracker": "https://github.com/constructorfleet/hacs-better-ollama/issues",
+  "requirements": ["ollama==0.6.3"],
+  "version": "2.0.0"
 }

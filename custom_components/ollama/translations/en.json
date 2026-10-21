@@ -1,0 +1,187 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Service is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "invalid_url": "Invalid hostname or IP address",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
+        },
+        "description": "The Ollama integration needs to re-authenticate with your Ollama API key.",
+        "title": "Authentication expired for {name}"
+      },
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "url": "URL"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "Failed to connect",
+        "download_failed": "Model downloading failed",
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled."
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "progress": {
+        "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+      },
+      "step": {
+        "download": {
+          "title": "Downloading model"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "Keep alive",
+            "max_history": "Max history messages",
+            "model": "Model",
+            "name": "Name",
+            "num_ctx": "Context window size",
+            "prompt": "Instructions",
+            "think": "Think before responding"
+          },
+          "data_description": {
+            "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."
+          }
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "cannot_connect": "Failed to connect",
+        "download_failed": "Model downloading failed",
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled."
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "progress": {
+        "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+      },
+      "step": {
+        "download": {
+          "title": "Downloading model"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "Keep alive",
+            "llm_hass_api": "Control Home Assistant",
+            "max_history": "Max history messages",
+            "model": "Model",
+            "name": "Name",
+            "num_ctx": "Context window size",
+            "prompt": "Instructions",
+            "think": "Think before responding"
+          },
+          "data_description": {
+            "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."
+          }
+        }
+      }
+    },
+    "decision": {
+      "abort": {
+        "cannot_connect": "Failed to connect",
+        "download_failed": "Model downloading failed",
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled.",
+        "not_decision_model": "The downloaded model does not support System One decisions."
+      },
+      "entry_type": "Decision model",
+      "error": {
+        "not_decision_model": "The downloaded model does not support System One decisions."
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure decision model",
+        "user": "Add decision model"
+      },
+      "progress": {
+        "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+      },
+      "step": {
+        "download": {
+          "title": "Downloading model"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "Keep alive",
+            "model": "Model",
+            "name": "Name"
+          },
+          "data_description": {
+            "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "model": "A System One decision model, such as nimble or clef. Requires Ollama v0.35.0 or later."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "decision_failed": {
+      "message": "Error talking to the Ollama server: {error}"
+    },
+    "duplicate_question_name": {
+      "message": "More than one question is named {name}."
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} was not found."
+    },
+    "invalid_decision_request": {
+      "message": "Invalid decision request: {error}"
+    },
+    "not_decision_entity": {
+      "message": "{entity_id} is not an Ollama decision entity. Add a decision model to use it with this action."
+    },
+    "unsupported_attachment_type": {
+      "message": "Ollama only supports image attachments in user content, but received non-image attachment."
+    },
+    "unsupported_decision_attachment_type": {
+      "message": "Decision attachments must be PNG, JPEG or WebP images, but received {mime_type}."
+    }
+  },
+  "services": {
+    "decide": {
+      "name": "Decide",
+      "description": "Answers yes/no (noul), choice and score questions about a prompt and/or entity states with an Ollama System One decision model.",
+      "fields": {
+        "attachments": {
+          "name": "Attachments",
+          "description": "Images (PNG, JPEG or WebP) shared by all questions. Requires a vision decision model such as clef."
+        },
+        "entities": {
+          "name": "Entities",
+          "description": "Entities whose current state and attributes are included in the state the questions are asked about."
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "Text describing the state the questions are about. When entities are also given, this is included as `context`."
+        },
+        "questions": {
+          "name": "Questions",
+          "description": "List of questions. Each has a type (noul, choice or score), instructions, criteria (choice: option to description map; score: list from lowest to highest; noul: optional true/false descriptions) and an optional name used as the answer key."
+        }
+      }
+    }
+  }
+}

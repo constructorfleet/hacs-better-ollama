@@ -23,6 +23,7 @@ Uncomment and customize these badges if you want to use them:
 - **Easy Setup**: Simple configuration through the UI - no YAML required
 - **Multiple Agents**: Create conversation and AI task agents with different models
 - **Vision Support**: Use multimodal models (LLaVA, Moondream) to process images 📷
+- **System One Decisions**: Ask fast yes/no, choice and score questions with decision models (Nimble, Clef)
 - **Streaming Responses**: Real-time conversation streaming for immediate feedback
 - **Tool Integration**: Connect with Home Assistant services and entities
 - **Conversation History**: Configurable message history for context retention
@@ -36,7 +37,7 @@ Uncomment and customize these badges if you want to use them:
 Platform | Description
 -- | --
 `conversation` | AI conversation agents with streaming support
-`ai_task` | Structured data generation with vision support
+`ai_task` | Structured data generation with vision support, and System One decision entities
 
 ## 🚀 Quick Start
 
@@ -161,6 +162,17 @@ AI Task agents generate structured data from natural language:
 - Generate formatted responses for automations
 - Support complex data structures
 
+### Decision Models
+
+Decision subentries use an Ollama [System One](https://docs.ollama.com/capabilities/decision)
+model (such as `nimble`, `clef` or `clef-flash`, Ollama v0.35.0+) to answer typed questions
+instead of generating text:
+- `noul`: yes/no, returned as the probability of `true`
+- `choice`: pick one of 2+ named options, with per-option probabilities
+- `score`: rate on 2–10 ordered levels, returned as a probability-weighted score
+
+Add one with **Add decision model** on the integration, then call `ollama.decide`.
+
 ## Vision Models 📷
 
 Vision-capable models can process and understand images. Use them for:
@@ -198,6 +210,46 @@ data:
   attachments:
     - /local/photo.jpg
 ```
+
+### `ollama.decide`
+
+Ask a decision entity questions about a prompt and/or the current state of entities.
+When entities are given, the state sent to the model is `{"context": <prompt>, "entities": [...]}`,
+so questions can refer to fields in backticks (for example ``Is any door in `entities` open?``).
+Each question needs a `type` and `instructions`; `name` (the answer key) is optional.
+Images can be attached for vision decision models such as Clef.
+
+```yaml
+action: ollama.decide
+target:
+  entity_id: ai_task.ollama_decision
+data:
+  prompt: "It is 11pm and everyone is in bed."
+  entities:
+    - binary_sensor.front_door
+    - lock.back_door
+  questions:
+    - name: secure
+      type: noul
+      instructions: "Is the house secured for the night?"
+      criteria:
+        "true": "All doors closed and locked"
+        "false": "A door is open or unlocked"
+    - name: action
+      type: choice
+      instructions: "What should happen next?"
+      criteria:
+        nothing: "Everything is fine"
+        notify: "Tell someone"
+        lock: "Lock the doors"
+    - name: urgency
+      type: score
+      instructions: "How urgent is it to act?"
+      criteria: ["Routine", "Soon", "Immediate"]
+response_variable: decision
+```
+
+`decision["ai_task.ollama_decision"].answers.secure.noul` is then e.g. `0.03`.
 
 ### Configuration Entry Management
 
