@@ -147,9 +147,6 @@
     "entity_not_found": {
       "message": "Entity {entity_id} was not found."
     },
-    "invalid_decision_request": {
-      "message": "Invalid decision request: {error}"
-    },
     "not_decision_entity": {
       "message": "{entity_id} is not an Ollama decision entity. Add a decision model to use it with this action."
     },

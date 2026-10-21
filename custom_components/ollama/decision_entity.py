@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from pydantic import ValidationError
+import httpx
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.const import CONF_MODEL
@@ -50,22 +50,13 @@ class OllamaDecisionEntity(
         settings = {**self.entry.data, **self.subentry.data}
         keep_alive_seconds = int(settings.get(CONF_KEEP_ALIVE, DEFAULT_DECISION_KEEP_ALIVE))
 
-        try:
-            payload = ollama.SystemOneRequest(
-                model=settings[CONF_MODEL],
-                state=state,  # type: ignore[arg-type]
-                questions=questions,  # type: ignore[arg-type]
-                # -1 must be sent as a number; other values as a duration string.
-                keep_alive=(
-                    keep_alive_seconds if keep_alive_seconds == KEEP_ALIVE_FOREVER else f"{keep_alive_seconds}s"
-                ),
-            ).model_dump(exclude_none=True)
-        except ValidationError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_decision_request",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        payload: dict[str, Any] = {
+            "model": settings[CONF_MODEL],
+            "state": state,
+            "questions": questions,
+            # -1 must be sent as a number; other values as a duration string.
+            "keep_alive": keep_alive_seconds if keep_alive_seconds == KEEP_ALIVE_FOREVER else f"{keep_alive_seconds}s",
+        }
 
         if attachments:
             for attachment in attachments:
@@ -80,20 +71,20 @@ class OllamaDecisionEntity(
             ]
 
         try:
-            # AsyncClient.systemone() does not accept images yet, so post the request
-            # through the client's request helper to keep its auth and error handling.
-            response = await self.entry.runtime_data._request(  # noqa: SLF001
-                ollama.SystemOneResponse,
+            # The ollama library Home Assistant pins has no System One support, so post
+            # through the client's raw request helper to keep its auth and error handling.
+            response = await self.entry.runtime_data._request_raw(  # noqa: SLF001
                 "POST",
                 SYSTEMONE_PATH,
                 json=payload,
             )
-        except (ollama.ResponseError, ollama.RequestError, ConnectionError) as err:
+        except (ollama.ResponseError, ollama.RequestError, ConnectionError, httpx.HTTPError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="decision_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        _LOGGER.debug("System One response: %s", response)
-        return response.model_dump()
+        result: dict[str, Any] = response.json()
+        _LOGGER.debug("System One response: %s", result)
+        return result
