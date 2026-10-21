@@ -1,9 +1,8 @@
 """AI Task integration for Ollama."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import SUBENTRY_TYPE_DECISION
+from .decision_entity import OllamaDecisionEntity
 from .entity import OllamaBaseLLMEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,11 +25,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up AI Task entities."""
     for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != "ai_task_data":
+        if subentry.subentry_type == "ai_task_data":
+            entity: ai_task.AITaskEntity = OllamaTaskEntity(config_entry, subentry)
+        elif subentry.subentry_type == SUBENTRY_TYPE_DECISION:
+            entity = OllamaDecisionEntity(config_entry, subentry)
+        else:
             continue
 
         async_add_entities(
-            [OllamaTaskEntity(config_entry, subentry)],
+            [entity],
             config_subentry_id=subentry.subentry_id,
         )
 
@@ -43,6 +48,7 @@ class OllamaTaskEntity(
         ai_task.AITaskEntityFeature.GENERATE_DATA | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,

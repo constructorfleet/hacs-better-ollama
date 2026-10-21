@@ -1,0 +1,30 @@
+decide:
+  target:
+    entity:
+      integration: ollama
+      domain: ai_task
+  fields:
+    prompt:
+      example: "Our checkout has returned 500 errors since 9am."
+      selector:
+        text:
+          multiline: true
+    entities:
+      example: "binary_sensor.front_door"
+      selector:
+        entity:
+          multiple: true
+    questions:
+      required: true
+      example: >-
+        [{"name": "door_open", "type": "noul", "instructions": "Is any door open?"},
+        {"name": "urgency", "type": "score", "instructions": "How urgent is this?",
+        "criteria": ["Routine", "Soon", "Immediate"]}]
+      selector:
+        object:
+    attachments:
+      selector:
+        media:
+          accept:
+            - "image/*"
+          multiple: true
