@@ -71,7 +71,7 @@ class OllamaDecisionEntity(
             ]
 
         try:
-            # The ollama library Home Assistant pins has no System One support, so post
+            # The ollama library Home Assistant ships has no System One support, so post
             # through the client's raw request helper to keep its auth and error handling.
             response = await self.entry.runtime_data._request_raw(  # noqa: SLF001
                 "POST",

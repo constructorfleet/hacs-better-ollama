@@ -9,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/constructorfleet/hacs-better-ollama/issues",
-  "requirements": ["ollama==0.6.2"],
+  "requirements": ["ollama>=0.6.2"],
   "version": "2.0.0"
 }
